@@ -16,9 +16,10 @@ module Rack
       @hsts = {} if @hsts.nil? || @hsts == true
       @hsts = self.class.default_hsts_options.merge(@hsts) if @hsts
 
-      @exclude = options[:exclude]
-      @host    = options[:host]
-      @port    = options[:port]
+      @exclude          = options[:exclude]
+      @host             = options[:host]
+      @port             = options[:port]
+      @insecure_cookies = Array(options[:insecure_cookies])
     end
 
     def call(env)
@@ -78,7 +79,8 @@ module Rack
           end
 
           headers['Set-Cookie'] = cookies.map { |cookie|
-            if cookie !~ /; secure(;|$)/
+            name = cookie.split('=', 2).first
+            if cookie !~ /; secure(;|$)/ && !@insecure_cookies.include?(name)
               "#{cookie}; secure"
             else
               cookie

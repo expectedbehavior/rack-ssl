@@ -117,6 +117,14 @@ class TestSSL < Test::Unit::TestCase
     assert !last_response.headers['Set-Cookie']
   end
 
+  def test_insecure_cookies
+    self.app = Rack::SSL.new(default_app, :insecure_cookies => ['id'])
+
+    get "https://example.org/"
+    assert_equal ["id=1; path=/", "token=abc; path=/; secure; HttpOnly" ],
+      last_response.headers['Set-Cookie'].split("\n")
+  end
+
   def test_redirect_to_host
     self.app = Rack::SSL.new(default_app, :host => "ssl.example.org")
     get "http://example.org/path?key=value"
