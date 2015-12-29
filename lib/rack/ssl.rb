@@ -16,9 +16,8 @@ module Rack
       @hsts = {} if @hsts.nil? || @hsts == true
       @hsts = self.class.default_hsts_options.merge(@hsts) if @hsts
 
-      @exclude          = options[:exclude]
-      @host             = options[:host]
-      @port             = options[:port]
+      @exclude = options[:exclude]
+      @host    = options[:host]
       @insecure_cookies = Array(options[:insecure_cookies])
     end
 
@@ -48,15 +47,15 @@ module Rack
       end
 
       def redirect_to_https(env)
-        req        = Request.new(env)
-        url        = URI(req.url)
-        url.scheme = "https"
-        url.host   = @host if @host
-        url.port   = @port if @port
-        headers    = hsts_headers.merge('Content-Type' => 'text/html',
-                                        'Location'     => url.to_s)
+        req = Request.new(env)
 
-        [301, headers, []]
+        host = @host || req.host
+        location = "https://#{host}#{req.fullpath}"
+
+        status  = %w[GET HEAD].include?(req.request_method) ? 301 : 307
+        headers = { 'Content-Type' => 'text/html', 'Location' => location }
+
+        [status, headers, []]
       end
 
       # http://tools.ietf.org/html/draft-hodges-strict-transport-sec-02
